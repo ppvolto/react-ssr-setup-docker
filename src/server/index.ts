@@ -16,12 +16,7 @@ const app = express.default();
 
 // Use Nginx or Apache to serve static assets in production or remove the if() around the following
 // lines to use the express.static middleware to serve assets for production (not recommended!)
-if (process.env.NODE_ENV === 'development') {
-    app.use(paths.publicPath, express.static(path.join(paths.clientBuild, paths.publicPath)));
-} else {
-    //TODO: Check correct Access to Static files
-    app.use(paths.publicPath, express.static(path.join(__dirname, 'static')));
-}
+app.use(paths.publicPath, express.static(path.join(paths.clientBuild, paths.publicPath)));
 
 app.use(cors());
 

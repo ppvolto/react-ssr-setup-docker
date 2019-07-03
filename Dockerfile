@@ -25,12 +25,11 @@ RUN yarn build
 
 FROM node_base as release
 WORKDIR /usr/app
-COPY --from=build /usr/app/build/client /usr/app/client
-COPY --from=build /usr/app/build/server /usr/app/server
+
+COPY --from=build /usr/app/build /usr/app/build
 COPY --from=deps /usr/app/node_modules /usr/app/node_modules
 
 USER node
 
 EXPOSE 8500
-CMD [ "node", "server/server.js" ]
-
+CMD [ "node", "build/server/server.js" ]
