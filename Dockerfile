@@ -21,7 +21,9 @@ WORKDIR /app
 COPY package.json /app
 COPY yarn.lock /app
 # COPY .npmrc /app
-RUN yarn
+RUN yarn install --pure-lockfile --production
+RUN cp -R node_modules /tmp/node_modules
+RUN yarn install --pure-lockfile
 
 COPY . .
 
@@ -30,13 +32,14 @@ RUN yarn build
 ############################
 # STEP 2 build a small image
 ############################
-FROM node:12-alpine
+FROM node:12-alpine as release
 
 RUN mkdir -p /app
 WORKDIR /app
 
-COPY --from=builder /app/build/server /app
+COPY --from=builder /tmp/node_modules /app/node_modules
 COPY --from=builder /app/build/client /app/static
+COPY --from=builder /app/build/server /app
 
 USER appuser
 

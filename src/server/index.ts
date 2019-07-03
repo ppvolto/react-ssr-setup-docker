@@ -20,7 +20,7 @@ if (process.env.NODE_ENV === 'development') {
     app.use(paths.publicPath, express.static(path.join(paths.clientBuild, paths.publicPath)));
 } else {
     //TODO: Check correct Access to Static files
-    app.use(paths.publicPath, express.static('static'));
+    app.use(paths.publicPath, express.static(path.join(__dirname, 'static')));
 }
 
 app.use(cors());
