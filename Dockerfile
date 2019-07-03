@@ -1,47 +1,36 @@
-############################
-# STEP 1 build executable binary
-############################
-FROM node:12-alpine as builder
+FROM node:12-alpine as node_base
 
-ARG GIT_TOKEN
-ENV NODE_ENV=production
+FROM node_base as deps
+ARG NODE_ENV=production
+ENV NODE_ENV=${NODE_ENV}
 
-# Install git + SSL ca certificates.
-# Git is required for fetching the dependencies.
-# Ca-certificates is required to call HTTPS endpoints.
-RUN apk update && apk add --no-cache git ca-certificates tzdata && update-ca-certificates
+RUN apk update && apk add --no-cache git ca-certificates tzdata yarn && update-ca-certificates
 
-# Create appuser
-RUN adduser -D -g '' appuser
+WORKDIR /usr/app
+COPY package.json /usr/app/package.json
+COPY yarn.lock /usr/app/yarn.lock
+#COPY .npmrc /usr/app/.npmrc
+RUN yarn install --frozen-lockfile --production && yarn cache clean
 
-RUN mkdir -p /app
-WORKDIR /app
+FROM node_base as build
 
-# Install app dependencies
-COPY package.json /app
-COPY yarn.lock /app
-# COPY .npmrc /app
-RUN yarn install --pure-lockfile --production
-RUN cp -R node_modules /tmp/node_modules
-RUN yarn install --pure-lockfile
-
-COPY . .
-
+WORKDIR /usr/app
+COPY package.json /usr/app/package.json
+COPY yarn.lock /usr/app/yarn.lock
+COPY .npmrc /usr/app/.npmrc
+RUN yarn install --frozen-lockfile && yarn cache clean
+COPY --from=deps /usr/app/node_modules /usr/app/node_modules
+COPY . /usr/app
 RUN yarn build
 
-############################
-# STEP 2 build a small image
-############################
-FROM node:12-alpine as release
+FROM node_base as release
+WORKDIR /usr/app
+COPY --from=build /usr/app/build/client /usr/app/client
+COPY --from=build /usr/app/build/server /usr/app/server
+COPY --from=deps /usr/app/node_modules /usr/app/node_modules
 
-RUN mkdir -p /app
-WORKDIR /app
-
-COPY --from=builder /tmp/node_modules /app/node_modules
-COPY --from=builder /app/build/client /app/static
-COPY --from=builder /app/build/server /app
-
-USER appuser
+USER node
 
 EXPOSE 8500
-CMD [ "node", "server.js" ]
+CMD [ "node", "server/server.js" ]
+
