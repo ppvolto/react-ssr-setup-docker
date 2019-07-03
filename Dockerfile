@@ -17,7 +17,7 @@ FROM node_base as build
 WORKDIR /usr/app
 COPY package.json /usr/app/package.json
 COPY yarn.lock /usr/app/yarn.lock
-COPY .npmrc /usr/app/.npmrc
+#COPY .npmrc /usr/app/.npmrc
 RUN yarn install --frozen-lockfile && yarn cache clean
 COPY --from=deps /usr/app/node_modules /usr/app/node_modules
 COPY . /usr/app
