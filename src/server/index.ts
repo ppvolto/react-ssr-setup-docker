@@ -18,6 +18,9 @@ const app = express.default();
 // lines to use the express.static middleware to serve assets for production (not recommended!)
 if (process.env.NODE_ENV === 'development') {
     app.use(paths.publicPath, express.static(path.join(paths.clientBuild, paths.publicPath)));
+} else {
+    //TODO: Check correct Access to Static files
+    app.use(paths.publicPath, express.static('static'));
 }
 
 app.use(cors());
